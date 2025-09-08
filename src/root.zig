@@ -65,7 +65,7 @@ pub const String = extern struct {
     chars: [*]const u8,
 
     /// Converts a Zig comptime string slice to a Clay_String, see `fromRuntimeSlice` form non-comptime strings.
-    pub fn fromSlice(comptime string: []const u8) String {
+    pub fn fromComptimeSlice(comptime string: []const u8) String {
         return .{
             .is_statically_allocated = true,
             .chars = @ptrCast(@constCast(string)),
@@ -74,7 +74,7 @@ pub const String = extern struct {
     }
 
     /// Converts a Zig string slice to a Clay_String
-    pub fn fromRuntimeSlice(string: []const u8) String {
+    pub fn fromSlice(string: []const u8) String {
         return .{
             .is_statically_allocated = false,
             .chars = @ptrCast(@constCast(string)),
@@ -232,7 +232,7 @@ pub const Padding = extern struct {
 
     /// Equal padding on all sides
     pub fn all(size: u16) Padding {
-        return Padding{
+        return .{
             .left = size,
             .right = size,
             .top = size,
@@ -444,37 +444,37 @@ pub const ElementId = extern struct {
 
     /// Creates a global element ID from a string
     pub fn ID(string: []const u8) ElementId {
-        return cdefs.Clay__HashString(.fromRuntimeSlice(string), 0, 0); // TODO move hashing to zig side for performance
+        return cdefs.Clay__HashString(.fromSlice(string), 0, 0); // TODO move hashing to zig side for performance (?)
     }
 
     /// Creates a global element ID with an index component for use in loops
     /// Equivalent to `ID("prefix0")`, `ID("prefix1")`, etc. without string allocations
     pub fn IDI(string: []const u8, index: u32) ElementId {
-        return cdefs.Clay__HashString(.fromRuntimeSlice(string), index, 0);
+        return cdefs.Clay__HashString(.fromSlice(string), index, 0);
     }
 
     /// Creates a local element ID from a string
     /// Local IDs are scoped to the current parent element
     pub fn localID(string: []const u8) ElementId {
-        return cdefs.Clay__HashString(.fromRuntimeSlice(string), 0, cdefs.Clay__GetParentElementId());
+        return cdefs.Clay__HashString(.fromSlice(string), 0, cdefs.Clay__GetParentElementId());
     }
 
     /// Creates a local element ID from a string with index
     /// Local IDs are scoped to the current parent element
     pub fn localIDI(string: []const u8, index: u32) ElementId {
-        return cdefs.Clay__HashString(.fromRuntimeSlice(string), index, cdefs.Clay__GetParentElementId());
+        return cdefs.Clay__HashString(.fromSlice(string), index, cdefs.Clay__GetParentElementId());
     }
 
     /// Creates a global element ID from a source location (@src())
     /// Useful for auto-generating unique IDs based on code location
     pub fn fromSrc(comptime src: std.builtin.SourceLocation) ElementId {
-        return cdefs.Clay__HashString(.fromSlice(src.module ++ ":" ++ src.file ++ ":" ++ std.fmt.comptimePrint("{}", .{src.column})), 0, 0);
+        return cdefs.Clay__HashString(.fromComptimeSlice(src.module ++ ":" ++ src.file ++ ":" ++ std.fmt.comptimePrint("{}", .{src.column})), 0, 0);
     }
 
     /// Creates a global element ID from a source location (@src()) with an index
     /// Useful for auto-generating unique IDs based on code location in loops
     pub fn fromSrcI(comptime src: std.builtin.SourceLocation, index: u32) ElementId {
-        return cdefs.Clay__HashString(.fromSlice(src.module ++ ":" ++ src.file ++ ":" ++ std.fmt.comptimePrint("{}", .{src.column})), index, 0);
+        return cdefs.Clay__HashString(.fromComptimeSlice(src.module ++ ":" ++ src.file ++ ":" ++ std.fmt.comptimePrint("{}", .{src.column})), index, 0);
     }
 };
 
@@ -970,21 +970,16 @@ pub fn onHover(
         user_data: T,
     ) void,
 ) void {
+    const local = struct {
+        pub fn OnHoverWrapper(element_id: ElementId, pointer_data: PointerData, user_data_: ?*anyopaque) callconv(.c) void {
+            onHoverFunction(element_id, pointer_data, anyopaquePtrToType(T, user_data_));
+        }
+    };
+
     if (!(T == void) and @sizeOf(T) != @sizeOf(usize))
         @compileError("`T` must be a type of same size as a pointer or be the type `void`");
 
-    cdefs.Clay_OnHover(
-        struct {
-            pub fn f(element_id: ElementId, pointer_data: PointerData, user_data_: ?*anyopaque) callconv(.C) void {
-                onHoverFunction(
-                    element_id,
-                    pointer_data,
-                    anyopaquePtrToAnytype(T, user_data_),
-                );
-            }
-        }.f,
-        anytypeToAnyopaquePtr(user_data),
-    );
+    cdefs.Clay_OnHover(local.OnHoverWrapper, anytypeToAnyopaquePtr(user_data));
 }
 
 /// Experimental - Used for integrating with external scrolling systems
@@ -1004,20 +999,16 @@ pub fn setQueryScrollOffsetFunction(
         user_data: T,
     ) Vector2,
 ) void {
+    const local = struct {
+        fn QueryScrollOffsetFunctionWrapper(element_id_: u32, user_data_: ?*anyopaque) callconv(.c) Dimensions {
+            return queryScrollOffsetFunction(element_id_, anyopaquePtrToType(T, user_data_));
+        }
+    };
+
     if (!(T == void) and @sizeOf(T) != @sizeOf(usize))
         @compileError("`T` must be a type of same size as a pointer or be the type `void`");
 
-    cdefs.Clay_SetQueryScrollOffsetFunction(
-        struct {
-            pub fn f(element_id_: u32, user_data_: ?*anyopaque) callconv(.c) Dimensions {
-                return queryScrollOffsetFunction(
-                    element_id_,
-                    anyopaquePtrToAnytype(T, user_data_),
-                );
-            }
-        }.f,
-        anytypeToAnyopaquePtr(user_data),
-    );
+    cdefs.Clay_SetQueryScrollOffsetFunction(local.QueryScrollOffsetFunctionWrapper, anytypeToAnyopaquePtr(user_data));
 }
 
 /// Sets a function to measure text dimensions
@@ -1050,21 +1041,16 @@ pub fn setMeasureTextFunction(
         user_data: T,
     ) Dimensions,
 ) void {
+    const local = struct {
+        pub fn MeasureTextFunctionWrapper(string: StringSlice, config: *TextElementConfig, user_data_: ?*anyopaque) callconv(.c) Dimensions {
+            return measureTextFunction(string.chars[0..@intCast(string.length)], config, anyopaquePtrToType(T, user_data_));
+        }
+    };
+
     if (!(T == void) and @sizeOf(T) != @sizeOf(usize))
         @compileError("`T` must be a type of same size as a pointer or be the type `void`");
 
-    cdefs.Clay_SetMeasureTextFunction(
-        struct {
-            pub fn f(string: StringSlice, config: *TextElementConfig, user_data_: ?*anyopaque) callconv(.c) Dimensions {
-                return measureTextFunction(
-                    string.chars[0..@intCast(string.length)],
-                    config,
-                    anyopaquePtrToAnytype(T, user_data_),
-                );
-            }
-        }.f,
-        anytypeToAnyopaquePtr(user_data),
-    );
+    cdefs.Clay_SetMeasureTextFunction(local.MeasureTextFunctionWrapper, anytypeToAnyopaquePtr(user_data));
 }
 
 /// Creates a Clay arena with the given memory buffer
@@ -1082,7 +1068,7 @@ pub fn createArenaWithCapacityAndMemory(buffer: []u8) Arena {
 /// text("Hello World", .{ .font_size = 24, .color = .{255, 0, 0, 255} });
 /// ```
 pub fn text(string: []const u8, config: TextElementConfig) void { //TODO: re-evaluate the value of having a comptime and runtime version of this
-    cdefs.Clay__OpenTextElement(.fromRuntimeSlice(string), cdefs.Clay__StoreTextElementConfig(config));
+    cdefs.Clay__OpenTextElement(.fromSlice(string), cdefs.Clay__StoreTextElementConfig(config));
 }
 
 /// Creates a text element with the given string and configuration
@@ -1127,7 +1113,7 @@ fn anytypeToAnyopaquePtr(user_data: anytype) ?*anyopaque {
     }
 }
 
-fn anyopaquePtrToAnytype(T: type, user_data: ?*anyopaque) T {
+fn anyopaquePtrToType(T: type, user_data: ?*anyopaque) T {
     if (T == void) {
         return {};
     } else if (@typeInfo(T) == .pointer) {

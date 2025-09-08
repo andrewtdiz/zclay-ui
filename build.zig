@@ -44,7 +44,6 @@ pub fn build(b: *B) void {
 
     {
         const tests_check = b.addTest(.{ .root_module = root_module });
-
         const check = b.step("check", "Check if tests compile");
         check.dependOn(&tests_check.step);
     }
