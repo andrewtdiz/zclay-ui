@@ -1,6 +1,10 @@
 const std = @import("std");
 const builtin = @import("builtin");
 
+test {
+    std.testing.refAllDeclsRecursive(@This());
+}
+
 pub extern var CLAY_LAYOUT_DEFAULT: LayoutConfig;
 
 /// Color used for highlighting elements with the debug inspector panel (can be modified directly)
@@ -218,7 +222,12 @@ pub const Padding = extern struct {
     /// Padding on bottom side
     bottom: u16 = 0,
 
-    pub const xy = @compileError("renamed to axes"); // TODO: remove this in v0.3.0
+    /// # DEPRECATED
+    /// Use .axes instead.
+    pub fn xy(top_bottom: u16, left_right: u16) Padding { // TODO: remove this in v0.3.0
+        std.log.warn("deprecated(Padding.xy): use Padding.axes instead", .{});
+        return axes(top_bottom, left_right);
+    }
 
     /// Padding with vertical and horizontal values
     pub fn axes(top_bottom: u16, left_right: u16) Padding {
