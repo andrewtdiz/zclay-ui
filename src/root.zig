@@ -1131,3 +1131,478 @@ fn anyopaquePtrToType(T: type, user_data: ?*anyopaque) T {
         return @bitCast(@as(usize, @intFromPtr(user_data)));
     }
 }
+
+pub inline fn sizing(width: SizingAxis, height: SizingAxis) Sizing {
+    return .{ .w = width, .h = height };
+}
+
+pub inline fn alignment(x: LayoutAlignmentX, y: LayoutAlignmentY) ChildAlignment {
+    return .{ .x = x, .y = y };
+}
+
+pub const w = struct {
+    pub const full: SizingAxis = SizingAxis.percent(1.0);
+    pub const fit: SizingAxis = .fit;
+    pub const auto: SizingAxis = .fit;
+    pub const grow: SizingAxis = .grow;
+
+    pub inline fn px(value: f32) SizingAxis {
+        return SizingAxis.fixed(value);
+    }
+
+    pub inline fn half() SizingAxis {
+        return SizingAxis.percent(0.5);
+    }
+
+    pub inline fn third() SizingAxis {
+        return SizingAxis.percent(1.0 / 3.0);
+    }
+
+    pub inline fn quarter() SizingAxis {
+        return SizingAxis.percent(0.25);
+    }
+
+    pub inline fn pct(value: f32) SizingAxis {
+        return SizingAxis.percent(value);
+    }
+
+    pub inline fn growMinMax(min: f32, max: f32) SizingAxis {
+        return SizingAxis.growMinMax(min, max);
+    }
+
+    pub inline fn fitMinMax(min: f32, max: f32) SizingAxis {
+        return SizingAxis.fitMinMax(min, max);
+    }
+};
+
+pub const h = struct {
+    pub const full: SizingAxis = SizingAxis.percent(1.0);
+    pub const fit: SizingAxis = .fit;
+    pub const auto: SizingAxis = .fit;
+    pub const grow: SizingAxis = .grow;
+
+    pub inline fn px(value: f32) SizingAxis {
+        return SizingAxis.fixed(value);
+    }
+
+    pub inline fn half() SizingAxis {
+        return SizingAxis.percent(0.5);
+    }
+
+    pub inline fn third() SizingAxis {
+        return SizingAxis.percent(1.0 / 3.0);
+    }
+
+    pub inline fn quarter() SizingAxis {
+        return SizingAxis.percent(0.25);
+    }
+
+    pub inline fn pct(value: f32) SizingAxis {
+        return SizingAxis.percent(value);
+    }
+
+    pub inline fn growMinMax(min: f32, max: f32) SizingAxis {
+        return SizingAxis.growMinMax(min, max);
+    }
+
+    pub inline fn fitMinMax(min: f32, max: f32) SizingAxis {
+        return SizingAxis.fitMinMax(min, max);
+    }
+};
+
+pub inline fn p(value: u16) Padding {
+    return Padding.all(value);
+}
+
+pub inline fn px(value: u16) Padding {
+    return .{ .left = value, .right = value, .top = 0, .bottom = 0 };
+}
+
+pub inline fn py(value: u16) Padding {
+    return .{ .left = 0, .right = 0, .top = value, .bottom = value };
+}
+
+pub inline fn pt(value: u16) Padding {
+    return .{ .left = 0, .right = 0, .top = value, .bottom = 0 };
+}
+
+pub inline fn pr(value: u16) Padding {
+    return .{ .left = 0, .right = value, .top = 0, .bottom = 0 };
+}
+
+pub inline fn pb(value: u16) Padding {
+    return .{ .left = 0, .right = 0, .top = 0, .bottom = value };
+}
+
+pub inline fn pl(value: u16) Padding {
+    return .{ .left = value, .right = 0, .top = 0, .bottom = 0 };
+}
+
+pub inline fn gap(value: u16) u16 {
+    return value;
+}
+
+pub const bg = struct {
+    const u8ToF32 = @as(f32, 1.0) / @as(f32, 255.0);
+
+    pub inline fn transparent() Color {
+        return .{ 0, 0, 0, 0 };
+    }
+
+    pub inline fn black() Color {
+        return .{ 0, 0, 0, 255 };
+    }
+
+    pub inline fn white() Color {
+        return .{ 255, 255, 255, 255 };
+    }
+
+    pub inline fn gray(shade: u16) Color {
+        return switch (shade) {
+            50 => .{ 250, 250, 250, 255 },
+            100 => .{ 245, 245, 245, 255 },
+            200 => .{ 229, 229, 229, 255 },
+            300 => .{ 209, 209, 209, 255 },
+            400 => .{ 163, 163, 163, 255 },
+            500 => .{ 117, 117, 117, 255 },
+            600 => .{ 82, 82, 82, 255 },
+            700 => .{ 54, 54, 54, 255 },
+            800 => .{ 31, 31, 31, 255 },
+            900 => .{ 18, 18, 18, 255 },
+            950 => .{ 3, 3, 3, 255 },
+            else => .{ 128, 128, 128, 255 },
+        };
+    }
+
+    pub inline fn red(shade: u16) Color {
+        return switch (shade) {
+            50 => .{ 254, 242, 242, 255 },
+            100 => .{ 254, 226, 226, 255 },
+            200 => .{ 254, 200, 200, 255 },
+            300 => .{ 252, 164, 164, 255 },
+            400 => .{ 249, 114, 114, 255 },
+            500 => .{ 239, 68, 68, 255 },
+            600 => .{ 220, 38, 38, 255 },
+            700 => .{ 185, 24, 24, 255 },
+            800 => .{ 153, 27, 27, 255 },
+            900 => .{ 122, 32, 32, 255 },
+            950 => .{ 66, 8, 8, 255 },
+            else => .{ 255, 0, 0, 255 },
+        };
+    }
+
+    pub inline fn blue(shade: u16) Color {
+        return switch (shade) {
+            50 => .{ 239, 245, 254, 255 },
+            100 => .{ 223, 234, 250, 255 },
+            200 => .{ 191, 215, 245, 255 },
+            300 => .{ 147, 187, 239, 255 },
+            400 => .{ 96, 158, 231, 255 },
+            500 => .{ 60, 128, 237, 255 },
+            600 => .{ 37, 106, 227, 255 },
+            700 => .{ 29, 84, 197, 255 },
+            800 => .{ 30, 71, 161, 255 },
+            900 => .{ 30, 62, 132, 255 },
+            950 => .{ 21, 37, 81, 255 },
+            else => .{ 0, 0, 255, 255 },
+        };
+    }
+
+    pub inline fn green(shade: u16) Color {
+        return switch (shade) {
+            50 => .{ 240, 254, 244, 255 },
+            100 => .{ 220, 252, 228, 255 },
+            200 => .{ 187, 248, 208, 255 },
+            300 => .{ 134, 240, 174, 255 },
+            400 => .{ 75, 225, 132, 255 },
+            500 => .{ 34, 205, 96, 255 },
+            600 => .{ 22, 166, 74, 255 },
+            700 => .{ 21, 132, 61, 255 },
+            800 => .{ 22, 104, 53, 255 },
+            900 => .{ 21, 86, 46, 255 },
+            950 => .{ 6, 48, 23, 255 },
+            else => .{ 0, 255, 0, 255 },
+        };
+    }
+
+    pub inline fn yellow(shade: u16) Color {
+        return switch (shade) {
+            50 => .{ 254, 251, 235, 255 },
+            100 => .{ 254, 244, 196, 255 },
+            200 => .{ 254, 231, 137, 255 },
+            300 => .{ 253, 215, 81, 255 },
+            400 => .{ 250, 192, 35, 255 },
+            500 => .{ 234, 166, 15, 255 },
+            600 => .{ 202, 130, 7, 255 },
+            700 => .{ 161, 93, 8, 255 },
+            800 => .{ 133, 73, 15, 255 },
+            900 => .{ 113, 60, 18, 255 },
+            950 => .{ 67, 32, 6, 255 },
+            else => .{ 255, 255, 0, 255 },
+        };
+    }
+
+    pub inline fn purple(shade: u16) Color {
+        return switch (shade) {
+            50 => .{ 250, 245, 254, 255 },
+            100 => .{ 243, 234, 254, 255 },
+            200 => .{ 232, 215, 254, 255 },
+            300 => .{ 215, 182, 253, 255 },
+            400 => .{ 192, 137, 251, 255 },
+            500 => .{ 168, 96, 244, 255 },
+            600 => .{ 147, 62, 231, 255 },
+            700 => .{ 126, 47, 203, 255 },
+            800 => .{ 107, 41, 170, 255 },
+            900 => .{ 89, 36, 141, 255 },
+            950 => .{ 59, 20, 101, 255 },
+            else => .{ 128, 0, 128, 255 },
+        };
+    }
+
+    pub inline fn pink(shade: u16) Color {
+        return switch (shade) {
+            50 => .{ 253, 243, 248, 255 },
+            100 => .{ 252, 229, 243, 255 },
+            200 => .{ 251, 203, 230, 255 },
+            300 => .{ 249, 168, 213, 255 },
+            400 => .{ 244, 114, 182, 255 },
+            500 => .{ 236, 65, 148, 255 },
+            600 => .{ 219, 37, 124, 255 },
+            700 => .{ 190, 24, 103, 255 },
+            800 => .{ 160, 24, 88, 255 },
+            900 => .{ 134, 25, 77, 255 },
+            950 => .{ 84, 7, 42, 255 },
+            else => .{ 255, 0, 128, 255 },
+        };
+    }
+
+    pub inline fn rgba(r: u8, g: u8, b: u8, a: u8) Color {
+        return .{ r * u8ToF32, g * u8ToF32, b * u8ToF32, a * u8ToF32 };
+    }
+
+    pub inline fn rgb(r: u8, g: u8, b: u8) Color {
+        return .{ r * u8ToF32, g * u8ToF32, b * u8ToF32, 1.0 };
+    }
+};
+
+pub const textColor = struct {
+    const u8ToF32 = @as(f32, 1.0) / @as(f32, 255.0);
+
+    pub inline fn black() Color {
+        return .{ 0, 0, 0, 255 };
+    }
+
+    pub inline fn white() Color {
+        return .{ 255, 255, 255, 255 };
+    }
+
+    pub inline fn gray(shade: u16) Color {
+        return bg.gray(shade);
+    }
+
+    pub inline fn red(shade: u16) Color {
+        return bg.red(shade);
+    }
+
+    pub inline fn blue(shade: u16) Color {
+        return bg.blue(shade);
+    }
+
+    pub inline fn green(shade: u16) Color {
+        return bg.green(shade);
+    }
+
+    pub inline fn yellow(shade: u16) Color {
+        return bg.yellow(shade);
+    }
+
+    pub inline fn purple(shade: u16) Color {
+        return bg.purple(shade);
+    }
+
+    pub inline fn pink(shade: u16) Color {
+        return bg.pink(shade);
+    }
+
+    pub inline fn rgba(r: u8, g: u8, b: u8, a: u8) Color {
+        return .{ r * u8ToF32, g * u8ToF32, b * u8ToF32, a * u8ToF32 };
+    }
+
+    pub inline fn rgb(r: u8, g: u8, b: u8) Color {
+        return .{ r * u8ToF32, g * u8ToF32, b * u8ToF32, 1.0 };
+    }
+};
+
+pub const rounded = struct {
+    pub const rounded: CornerRadius = CornerRadius.all(4);
+    pub const sm: CornerRadius = CornerRadius.all(2);
+    pub const md: CornerRadius = CornerRadius.all(6);
+    pub const lg: CornerRadius = CornerRadius.all(8);
+    pub const xl: CornerRadius = CornerRadius.all(12);
+    pub const xl2: CornerRadius = CornerRadius.all(16);
+    pub const xl3: CornerRadius = CornerRadius.all(24);
+    pub const full: CornerRadius = CornerRadius.all(9999);
+    pub const none: CornerRadius = CornerRadius.all(0);
+
+    pub inline fn all(radius: f32) CornerRadius {
+        return CornerRadius.all(radius);
+    }
+};
+
+pub const border = struct {
+    pub inline fn all() BorderWidth {
+        return BorderWidth.all(1);
+    }
+
+    pub inline fn allWidth(width: u16) BorderWidth {
+        return BorderWidth.all(width);
+    }
+
+    pub inline fn outside(width: u16) BorderWidth {
+        return BorderWidth.outside(width);
+    }
+
+    pub inline fn w2() BorderWidth {
+        return BorderWidth.all(2);
+    }
+
+    pub inline fn w4() BorderWidth {
+        return BorderWidth.all(4);
+    }
+
+    pub inline fn w8() BorderWidth {
+        return BorderWidth.all(8);
+    }
+
+    pub inline fn none() BorderWidth {
+        return BorderWidth.all(0);
+    }
+};
+
+pub const borderColor = struct {
+    pub inline fn gray(shade: u16) Color {
+        return bg.gray(shade);
+    }
+
+    pub inline fn red(shade: u16) Color {
+        return bg.red(shade);
+    }
+
+    pub inline fn blue(shade: u16) Color {
+        return bg.blue(shade);
+    }
+
+    pub inline fn green(shade: u16) Color {
+        return bg.green(shade);
+    }
+
+    pub inline fn black() Color {
+        return .{ 0, 0, 0, 1 };
+    }
+
+    pub inline fn white() Color {
+        return .{ 1, 1, 1, 1 };
+    }
+};
+
+pub const flex = struct {
+    pub const row: LayoutDirection = .left_to_right;
+    pub const col: LayoutDirection = .top_to_bottom;
+};
+
+pub const items = struct {
+    pub const start: ChildAlignment = .{ .x = .left, .y = .top };
+    pub const center: ChildAlignment = .{ .x = .center, .y = .center };
+    pub const end: ChildAlignment = .{ .x = .right, .y = .bottom };
+};
+
+pub const justify = struct {
+    pub const start: ChildAlignment = .{ .x = .left, .y = .top };
+    pub const center: ChildAlignment = .{ .x = .center, .y = .center };
+    pub const end: ChildAlignment = .{ .x = .right, .y = .bottom };
+};
+
+pub const textSize = struct {
+    pub const xs: u16 = 12;
+    pub const sm: u16 = 14;
+    pub const base: u16 = 16;
+    pub const lg: u16 = 18;
+    pub const xl: u16 = 20;
+    pub const xl2: u16 = 24;
+    pub const xl3: u16 = 30;
+    pub const xl4: u16 = 36;
+    pub const xl5: u16 = 48;
+    pub const xl6: u16 = 60;
+};
+
+pub const textAlign = struct {
+    pub const left: TextAlignment = .left;
+    pub const center: TextAlignment = .center;
+    pub const right: TextAlignment = .right;
+};
+
+pub const tracking = struct {
+    pub const tighter: u16 = 0;
+    pub const tight: u16 = 0;
+    pub const normal: u16 = 0;
+    pub const wide: u16 = 1;
+    pub const wider: u16 = 2;
+    pub const widest: u16 = 3;
+};
+
+pub const leading = struct {
+    pub inline fn none(fontSize: u16) u16 {
+        return fontSize;
+    }
+
+    pub inline fn tight(fontSize: u16) u16 {
+        return @intFromFloat(@as(f32, @floatFromInt(fontSize)) * 1.25);
+    }
+
+    pub inline fn snug(fontSize: u16) u16 {
+        return @intFromFloat(@as(f32, @floatFromInt(fontSize)) * 1.375);
+    }
+
+    pub inline fn normal(fontSize: u16) u16 {
+        return @intFromFloat(@as(f32, @floatFromInt(fontSize)) * 1.5);
+    }
+
+    pub inline fn relaxed(fontSize: u16) u16 {
+        return @intFromFloat(@as(f32, @floatFromInt(fontSize)) * 1.625);
+    }
+
+    pub inline fn loose(fontSize: u16) u16 {
+        return fontSize * 2;
+    }
+};
+
+pub const wrap = struct {
+    pub const words: TextElementConfigWrapMode = .words;
+    pub const newlines: TextElementConfigWrapMode = .new_lines;
+    pub const none: TextElementConfigWrapMode = .none;
+};
+
+pub inline fn z(index: i16) i16 {
+    return index;
+}
+
+pub const space = struct {
+    pub const s0: u16 = 0;
+    pub const s1: u16 = 4;
+    pub const s2: u16 = 8;
+    pub const s3: u16 = 12;
+    pub const s4: u16 = 16;
+    pub const s5: u16 = 20;
+    pub const s6: u16 = 24;
+    pub const s8: u16 = 32;
+    pub const s10: u16 = 40;
+    pub const s12: u16 = 48;
+    pub const s16: u16 = 64;
+    pub const s20: u16 = 80;
+    pub const s24: u16 = 96;
+    pub const s32: u16 = 128;
+    pub const s40: u16 = 160;
+    pub const s48: u16 = 192;
+    pub const s56: u16 = 224;
+    pub const s64: u16 = 256;
+};

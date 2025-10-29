@@ -20,12 +20,16 @@ const orange_hover: cl.Color = .{ 200, 120, 40, 255 };
 const white: cl.Color = .{ 250, 250, 255, 255 };
 const sidebar_border: cl.Color = .{ 180, 170, 165, 255 };
 
+const styles = @embedFile("resources/styles.css");
+
 var any_sidebar_item_hovered: bool = false;
 var sidebar_width = cl.w.px(300);
 var start_time: i64 = 0;
 
 pub fn init() void {
     start_time = std.time.milliTimestamp();
+
+    std.debug.print("styles: {s}\n", .{styles});
 }
 
 fn sidebarItemComponent(index: u32) void {
@@ -38,7 +42,7 @@ fn sidebarItemComponent(index: u32) void {
 
     UI()(.{
         .id = .IDI("SidebarBlob", index),
-        .layout = .{ .sizing = cl.sizing(cl.w.grow(), cl.h.px(50)) },
+        .layout = .{ .sizing = cl.sizing(cl.w.grow, cl.h.px(50)) },
         .background_color = bg_color,
     })({});
 }
@@ -60,7 +64,7 @@ pub fn createLayout(profile_picture: *const rl.Texture2D) []cl.RenderCommand {
     UI()(.{
         .id = .ID("OuterContainer"),
         .layout = .{
-            .direction = flex.row(),
+            .direction = flex.row,
             .sizing = .grow,
             .padding = p(16),
             .child_gap = gap(16),
@@ -70,20 +74,20 @@ pub fn createLayout(profile_picture: *const rl.Texture2D) []cl.RenderCommand {
         UI()(.{
             .id = .ID("SideBar"),
             .layout = .{
-                .direction = flex.col(),
-                .sizing = sizing(sidebar_width, h.grow()),
+                .direction = flex.col,
+                .sizing = sizing(sidebar_width, h.grow),
                 .padding = p(16),
                 .child_alignment = alignment(.center, .top),
                 .child_gap = gap(16),
             },
             .background_color = light_grey,
             .border = .{ .color = bg.gray(300), .width = .{ .right = 3 } },
-            .corner_radius = rounded.md(),
+            .corner_radius = rounded.md,
         })({
             UI()(.{
                 .id = .ID("ProfilePictureOuter"),
                 .layout = .{
-                    .sizing = .{ .w = w.grow() },
+                    .sizing = .{ .w = w.grow },
                     .padding = p(16),
                     .child_alignment = alignment(.left, .center),
                     .child_gap = gap(16),
@@ -114,7 +118,7 @@ pub fn createLayout(profile_picture: *const rl.Texture2D) []cl.RenderCommand {
             UI()(.{
                 .id = .ID("MainContentText"),
                 .layout = .{
-                    .sizing = sizing(w.px(500), h.grow()),
+                    .sizing = sizing(w.px(500), h.grow),
                     .padding = p(16),
                 },
                 .background_color = bg.blue(500),
