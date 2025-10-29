@@ -1,0 +1,3 @@
+[submodule "deps/wgpu-native-zig"]
+	path = deps/wgpu-native-zig
+	url = https://github.com/andrewtdiz/wgpu_native_zig.git

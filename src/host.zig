@@ -10,7 +10,6 @@ const rl = @import("raylib");
 
 const renderer = @import("raylib_render_clay.zig");
 
-// Context structure passed to DLL
 pub const GameContext = extern struct {
     screen_width: i32,
     screen_height: i32,
@@ -25,8 +24,6 @@ pub const GameContext = extern struct {
     fonts: *[10]?rl.Font,
 };
 
-// Function pointer type for DLL export
-// Returns a pointer to RenderCommand array and its length
 const UpdateAndRenderFn = *const fn (ctx: *const GameContext, out_render_commands: *[*]cl.RenderCommand, out_length: *usize) callconv(.c) void;
 const ShouldShowHandCursorFn = *const fn () callconv(.c) bool;
 const InitLayoutFn = *const fn () callconv(.c) void;
@@ -96,12 +93,11 @@ const GameLib = struct {
         var new_path_buf: [std.fs.max_path_bytes]u8 = undefined;
         const new_path = try lib.formatLoadedPath(lib.generation, &new_path_buf);
 
-        // On startup, wait briefly for the first DLL build to finish if needed.
         var attempt: u8 = 0;
         const start = std.time.milliTimestamp();
         while (!(try lib.copyFileOnce(new_path))) : (attempt += 1) {
             if (attempt >= 10) {
-                std.debug.print("Failed to stage DLL from {s}\n", .{ lib.sourcePath() });
+                std.debug.print("Failed to stage DLL from {s}\n", .{lib.sourcePath()});
                 return error.CopyFileFailed;
             }
             std.Thread.sleep(10 * std.time.ns_per_ms);
@@ -127,7 +123,7 @@ const GameLib = struct {
         std.mem.copyForwards(u8, lib.loaded_path_buf[0..new_path.len], new_path);
         lib.generation += 1;
 
-        std.debug.print("Loaded DLL from {s}\n", .{ new_path });
+        std.debug.print("Loaded DLL from {s}\n", .{new_path});
         init_layout_fn();
         return lib;
     }
@@ -259,6 +255,7 @@ const GameLib = struct {
         }
 
         std.debug.print("Reloading DLL...\n", .{});
+        const start = std.time.milliTimestamp();
 
         errdefer std.fs.deleteFileAbsolute(new_path) catch {};
 
@@ -296,8 +293,10 @@ const GameLib = struct {
         if (old_path.len > 0) {
             std.fs.deleteFileAbsolute(old_path) catch {};
         }
+        const end = std.time.milliTimestamp();
+        std.debug.print("Time taken to reload DLL: {d}ms\n", .{end - start});
 
-        std.debug.print("DLL reloaded successfully from {s}\n", .{ new_path });
+        std.debug.print("DLL reloaded successfully from {s}\n", .{new_path});
         return true;
     }
 
@@ -329,7 +328,6 @@ fn loadImage(comptime path: [:0]const u8) !rl.Texture2D {
 pub fn main() !void {
     const allocator = std.heap.page_allocator;
 
-    // init raylib
     rl.setConfigFlags(.{
         .msaa_4x_hint = true,
         .window_resizable = true,
@@ -338,11 +336,9 @@ pub fn main() !void {
     defer rl.closeWindow();
     rl.setTargetFPS(120);
 
-    // load assets
     try loadFont(@embedFile("./resources/Roboto-Regular.ttf"), 0, 24);
     const profile_picture = try loadImage("./resources/profile-picture.png");
 
-    // Load DLL - prefer the most recently modified candidate path
     const dll_paths = [_][]const u8{ "zig-out/lib/game.dll", "zig-out/bin/game.dll", "game.dll" };
     var selected_path: ?[]const u8 = null;
     var newest_mtime: i128 = std.math.minInt(i128);
@@ -379,17 +375,14 @@ pub fn main() !void {
     var last_time = rl.getTime();
 
     while (!rl.windowShouldClose()) {
-        // Check for debug toggle
         if (rl.isKeyPressed(.d)) {
             debug_mode_enabled = !debug_mode_enabled;
         }
 
-        // Calculate delta time
         const current_time = rl.getTime();
         const delta_time = @as(f32, @floatCast(current_time - last_time));
         last_time = current_time;
 
-        // Get input state
         const mouse_pos = rl.getMousePosition();
         const scroll_delta = rl.getMouseWheelMoveV().multiply(.{ .x = 6, .y = 6 });
 
@@ -400,7 +393,6 @@ pub fn main() !void {
             return;
         };
 
-        // Prepare context for DLL
         const ctx = GameContext{
             .screen_width = rl.getScreenWidth(),
             .screen_height = rl.getScreenHeight(),
@@ -415,12 +407,10 @@ pub fn main() !void {
             .fonts = &renderer.raylib_fonts,
         };
 
-        // Call DLL to get render commands
         var render_commands_ptr: [*]cl.RenderCommand = undefined;
         var render_commands_len: usize = 0;
         game_lib.update_and_render(&ctx, &render_commands_ptr, &render_commands_len);
 
-        // Update cursor based on hover state
         if (game_lib.should_show_hand_cursor) |fn_ptr| {
             if (fn_ptr()) {
                 rl.setMouseCursor(.pointing_hand);
@@ -432,7 +422,6 @@ pub fn main() !void {
         rl.beginDrawing();
         rl.clearBackground(rl.Color{ .r = 200, .g = 200, .b = 200, .a = 255 });
 
-        // Render the commands from DLL
         if (render_commands_len > 0) {
             const render_commands = render_commands_ptr[0..render_commands_len];
             renderer.clayRaylibRender(render_commands, allocator) catch {};
